@@ -2,7 +2,8 @@
 const express = require('express')
 const bp = require('body-parser')
 const fs = require('fs')
-const allCountries = require('./index');
+const country = require('./index');
+const { json, response } = require('express');
 
 //Creating new instance of express
 const app = express();
@@ -15,10 +16,25 @@ const PORT = configz.PORT;
 
 //Get call
 app.get('/homepage', (request, response) => {
-    response.status(200).send({allCountries}); //Shows all of the country's data
     //Testing purposes
-    var obj = allCountries.countryData[3];
-    console.log(obj);
+    var countryDataToJSON = JSON.parse(country.countryData);
+    response.status(200).send({countryDataToJSON}); //Shows all of the country's data
+})
+
+//Get call to grab province's data based on user's url
+app.get('/findprovincedata/:province', (request, response) => {
+    //Get province name
+    const requestedProvince = request.params.province;
+    var countryDataToJSON = JSON.parse(country.countryData);
+    
+    //Searching all provinces for requested province
+    for(var i = 0; i < countryDataToJSON[0].provinces.length;++i) {
+        if(countryDataToJSON[0].provinces[i].province.toLowerCase() == requestedProvince.toLowerCase()) {          
+            var requestedProvinceInfo = countryDataToJSON[0].provinces[i];
+        }
+    }
+    if(requestedProvinceInfo){response.status(200).send({requestedProvinceInfo});}
+    else{response.status(500).send({message: "Could not find province!"})};
 })
 
 //Post call using body
@@ -39,7 +55,6 @@ app.post('/findcountrybyid/:countryId', (request, response) => {
     console.log(testId);
     response.status(200).send(testId);
 })
-
 
 //Turning on server
 app.listen(PORT, () => console.log(`Server is running at part ${PORT}`));
